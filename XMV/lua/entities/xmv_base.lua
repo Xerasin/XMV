@@ -24,6 +24,9 @@ function ENT:Initialize()
 		self.CameraDist 	= 4
 		self.CameraDistVel 	= 0.1
 	end
+	self.TurretPositions = 
+	{
+	}
 	self.AngOffset = Angle(0,90,0)
 end
 
@@ -43,6 +46,9 @@ end
 function ENT:SetupDataTables()
 	self:NetworkVar( "Entity", 0, "Driver")
 	self:NetworkVar( "Int", 14, "ViewMode")
+	self:NetworkVar( "Int", 0, "TurretCount")
+	self:NetworkVar( "Int", 0, "MaxHealth")
+	self:NetworkVar( "Int", 0, "Health")
 	self:SetupDataTables2()
 end
 
@@ -153,6 +159,9 @@ function ENT:AssignPlayer(ply, driver)
 			--rider:UnSpectate()
 			--self:GetDriver():SetParent()
 			rider:SetMoveType(MOVETYPE_WALK)
+			rider:SetActiveWeapon(self.BeforeActiveWeapon)
+			
+			
 			for I=0,2 do
 				rider:DrawViewModel(true, I)
 			end
@@ -194,6 +203,8 @@ function ENT:AssignPlayer(ply, driver)
 		for I=0,2 do
 			ply:DrawViewModel(false, I)
 		end
+		self.BeforeActiveWeapon = ply:GetActiveWeapon()
+		ply:SetActiveWeapon(nil)
 		--drive.PlayerStartDriving(ply, self, "drive_xmv")
 		--ply:SetViewEntity(nil)
 		--ply:SetParent(self)
@@ -202,7 +213,12 @@ function ENT:AssignPlayer(ply, driver)
 				self:Remove()
 			end
 			if(ply == self:GetDriver()) then
+				ply:SetActiveWeapon(nil)
 				self:OnMove(ply, data)
+				if true then
+					self:FireTurrets()
+				end
+				
 			end
 		end)
 		
@@ -229,7 +245,12 @@ function ENT:AssignPlayer(ply, driver)
 	self.LastEnter = CurTime()
 end
 function ENT:OnRemove()
-	if CLIENT then return end
+	if CLIENT then
+		if self.TurretModels then
+			for k,v in pairs(self.TurretModels) do v:Remove() end
+		end
+		return
+	end
 	self:AssignPlayer(nil, self:GetDriver())
 end
 
@@ -249,11 +270,41 @@ if(CLIENT) then
 	
 	function ENT:DrawPlayerName(vector, angle, scale)
 		local pos,ang = LocalToWorld(vector, angle, self:GetPos(), self:GetAngles())
+		
 		self:DrawPlayerName2(pos, ang, scale)
 	end
 	function ENT:DrawPlayer(vector, angle, scale, ...)
 		local pos,ang = LocalToWorld(vector, angle, self:GetPos(), self:GetAngles())
 		self:DrawPlayer2(pos, ang, scale, ...)
+	end
+	
+	function ENT:DrawTurret(num, vector, angle, scale)
+		if not num then return end
+		if not self.TurretModels then self.TurretModels = {} end
+		if not self.TurretModels[num] then
+			local turret = ClientsideModel("models/weapons/w_smg1.mdl", RENDERGROUP_OPAQUE)
+			turret:SetNoDraw(true)
+			self.TurretModels[num] = turret
+
+			if type(scale) == "number" then
+				scale = Vector(1, 1, 1) * scale
+			end
+			local mat = Matrix()
+			mat:Scale(scale)
+			self.TurretModels[num]:EnableMatrix("RenderMultiply", mat)
+			self.TurretModels[num]:SetRenderOrigin(self:GetPos())
+			self.TurretModels[num]:SetRenderAngles(self:GetAngles())
+			self.TurretModels[num]:SetParent(self)
+		end
+		
+		local function SetupModel(box, pos, ang)
+			box:SetRenderOrigin(pos)
+			box:SetRenderAngles(ang)
+		end
+		
+		local pos, ang = LocalToWorld(vector, angle, self:GetPos(), self:GetAngles())
+		SetupModel(self.TurretModels[num], pos, ang)
+		self.TurretModels[num]:DrawModel()
 	end
 	
 	function ENT:DrawPlayer2(vector, angle, scale, func)
@@ -271,9 +322,10 @@ if(CLIENT) then
 		self.PlayerModel:SetRenderAngles(angle)
 		self.PlayerModel:SetupBones()
 		
-			if func then
-				func(self.PlayerModel)
-			end
+		if func then
+			func(self.PlayerModel)
+		end
+		
 		self.PlayerModel:DrawModel()
 	end
 	
@@ -283,12 +335,25 @@ if(CLIENT) then
 		local text = "No Driver"
 		if(rider and rider:IsValid()) then
 			color = team.GetColor(rider:Team())
-			text = rider:Name()
+			text = rider:Name() .. self:GetTurretCount()
 		end
 		cam.Start3D2D(vector, angle, scale)
 			draw.DrawText(text, "XMV_Player_Font", 0, 0, color, TEXT_ALIGN_CENTER )
 		cam.End3D2D()
 	end
+	function ENT:DrawTurrets()
+		local turretCount = self:GetTurretCount()
+		if turretCount > 0 then
+			if self.TurretPositions then
+				local maxn = table.maxn(self.TurretPositions)
+				turretCount = math.Clamp(turretCount, 0, maxn)
+				for I=1, turretCount do	
+					local v = self.TurretPositions[I]
+					self:DrawTurret(I, v[1], v[2], v[3])	
+				end
+			end
+		end
+	end	
 	function ENT:Draw()
 		self:DrawModel()
 		self:DrawPlayer(Vector(0, 5, 9.0), Angle(0, 90, 0), 0.2, function(model)
@@ -298,6 +363,7 @@ if(CLIENT) then
 				end
 		end)
 		self:DrawPlayerName(Vector(0, 0, 12.5), Angle(), 0.2)
+		self:DrawTurrets()
 	end
 	
 	hook.Add("Think","XMV_CAR_Think",function()
@@ -337,9 +403,7 @@ if(CLIENT) then
 		if LocalPlayer().XMVGetVehicle then
 			local self = LocalPlayer():XMVGetVehicle()
 			if(self and self:IsValid()) then -- Assume they are in a car
-				--
-				-- Zoom out when we use the mouse wheel (this is completely clientside, so it's ok to use a lua var!!)
-				--
+				
 				if not self.CameraDistVel then
 					self.CameraDist 	= 4
 					self.CameraDistVel 	= 0.1
@@ -350,8 +414,8 @@ if(CLIENT) then
 				self.CameraDist = math.Clamp( self.CameraDist, 2, 6 )
 				self.CameraDistVel = math.Approach( self.CameraDistVel, 0, self.CameraDistVel * FrameTime() * 2 )
 
-				cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK)))
-				cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK2)))
+				--cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK)))
+				--cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK2)))
 				
 				
 				cmd:ClearMovement()
@@ -407,7 +471,50 @@ if(CLIENT) then
 		self:NextThink(CurTime() + 0.01)
 	end
 else
+	function ENT:FireTurrets() 
+		local turrets = self:GetTurretCount()
+		if turrets == 0 then return end
+		if not self.NextShot then self.NextShot = CurTime() + 0.1 end
+		
+		if self.NextShot > CurTime() then return end
+
+		self.NextShot = CurTime() + 0.5
+	
+		for I=1, turrets do
+			if not self.TurretPositions[I] then return end
+			-- Get the shot angles and stuff.
+			local shootOrigin = self.TurretPositions[I][1] + self:GetVelocity() * engine.TickInterval()
+			local shootAngles = self.TurretPositions[I][2]
+		
+			-- Shoot a bullet
+			local bullet = {}
+				bullet.Num 			= 5
+				bullet.Src 			= self:GetPos()
+				bullet.Dir 			= shootAngles:Forward()
+				bullet.Spread 		= Vector()
+				bullet.Tracer		= 1
+				bullet.TracerName 	= "Tracer"
+				bullet.Force		= 10
+				bullet.Damage		= 10
+				bullet.Attacker 	= self:GetDriver()
+			self:FireBullets( bullet )
+			-- Make a muzzle flash
+			local effectdata = EffectData()
+				effectdata:SetOrigin( shootOrigin )
+				effectdata:SetAngles( shootAngles )
+				effectdata:SetScale( 1 )
+			util.Effect( "MuzzleEffect", effectdata )	
+			
+		end
+	end
+	
 	function ENT:Think()
+		if self:GetHealth() <= 0 and self:GetMaxHealth() ~= 0 and self:GetTurretCount() > 0 then
+			--Temp Replace
+			
+			SafeRemoveEntity(self)
+		end
+	
 		if (self:GetDriver() and self:GetDriver():IsValid() and not self:GetDriver():Alive()) then
 			self:AssignPlayer()
 		end
@@ -417,6 +524,17 @@ else
 		end
 		self:NextThink(CurTime() + 0.01)
 	end
+	
+	function ENT:StartTouch(entity)
+		if entity:GetClass() == "gmod_turret" then
+			SafeRemoveEntity(entity)
+			if self:GetTurretCount() == 0 then
+				self:SetHealth(self:GetMaxHealth())
+			end
+			self:SetTurretCount(self:GetTurretCount() + 1)
+		end
+	end
+
 	function ENT:Use(ply, call)
 		if ply:IsPlayer()  and (not self:GetDriver() or not self:GetDriver():IsValid()) then
 			if not self.LastEnter or CurTime() - self.LastEnter > 1 then
