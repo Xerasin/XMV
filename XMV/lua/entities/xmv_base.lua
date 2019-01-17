@@ -215,9 +215,9 @@ function ENT:AssignPlayer(ply, driver)
 			if(ply == self:GetDriver()) then
 				ply:SetActiveWeapon(nil)
 				self:OnMove(ply, data)
-				if true then
+				--[[if true then
 					self:FireTurrets()
-				end
+				end]]
 				
 			end
 		end)
