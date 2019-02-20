@@ -10,16 +10,16 @@ local w=8  //Width
 local l=8  //Length
 local h=5  //Height
 function ENT:Initialize()
-    if(SERVER) then
+	if(SERVER) then
 		self:SetModel("models/props_junk/cardboard_box001a.mdl")
-		
- 
+
+
 		local min=Vector(-w/2, -l/2,-3)
 		local max=Vector(w/2, l/2, 2)
-	 
+
 		self:PhysicsInitBox(min,max)
 
-		
+
 		self:DrawShadow(false)
 		local phys = self:GetPhysicsObject()
 		if (phys:IsValid()) then
@@ -32,7 +32,15 @@ function ENT:Initialize()
 		self:PhysWake()
 		self:SetMode(2)
 		self:SetUseType(SIMPLE_USE)
-    end
+
+		self:SetTurretCount(3)
+		self.TurretPositions = 
+		{
+			{Vector(1.5, -3.5, 0), Angle(0, -90, 0), 0.2},
+			{Vector(-1.5, -3.5, 0), Angle(0, -90, 0), 0.2},
+			{Vector(0, -3.5, 1.5), Angle(0, -90, 0), 0.2}
+		}
+	end
 end
 function ENT:AreWheelsTouching()
 	local normal = self:GetAngles():Up() * -1
@@ -244,6 +252,7 @@ if(CLIENT) then
 		    model:SetPoseParameter( "vehicle_steer", self.Steer * -1 )
 		end)
 		self:DrawPlayerName(Vector(0, 0, 2.5), Angle(), 0.2)
+		self:DrawTurrets()
 	end
 	
 else

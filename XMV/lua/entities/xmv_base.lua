@@ -475,35 +475,28 @@ else
 		local turrets = self:GetTurretCount()
 		if turrets == 0 then return end
 		if not self.NextShot then self.NextShot = CurTime() + 0.1 end
-		
+
 		if self.NextShot > CurTime() then return end
 
 		self.NextShot = CurTime() + 0.5
-	
+		
 		for I=1, turrets do
 			if not self.TurretPositions[I] then return end
 			-- Get the shot angles and stuff.
 			local shootOrigin = self.TurretPositions[I][1] + self:GetVelocity() * engine.TickInterval()
+			--debugoverlay.Sphere(shootOrigin, )
 			local shootAngles = self.TurretPositions[I][2]
-		
+			local pos, ang = LocalToWorld(shootOrigin, shootAngles, self:GetPos(), self:GetAngles())
 			-- Shoot a bullet
 			local bullet = {}
-				bullet.Num 			= 5
-				bullet.Src 			= self:GetPos()
-				bullet.Dir 			= shootAngles:Forward()
-				bullet.Spread 		= Vector()
-				bullet.Tracer		= 1
-				bullet.TracerName 	= "Tracer"
-				bullet.Force		= 10
-				bullet.Damage		= 10
-				bullet.Attacker 	= self:GetDriver()
+			bullet.Num 			= 20
+			bullet.Src 			= self:GetPos() + Vector(0, 0, 20)
+			bullet.Dir 			= self:GetAngles():Forward()
+			bullet.Force		= 10
+			bullet.Damage		= 1
+			bullet.Attacker 	= self:GetDriver()
+			bullet.IgnoreEntity = {self, self:GetDriver()}
 			self:FireBullets( bullet )
-			-- Make a muzzle flash
-			local effectdata = EffectData()
-				effectdata:SetOrigin( shootOrigin )
-				effectdata:SetAngles( shootAngles )
-				effectdata:SetScale( 1 )
-			util.Effect( "MuzzleEffect", effectdata )	
 			
 		end
 	end
