@@ -1,5 +1,5 @@
 module("xmv", package.seeall)
-local BASE_DIR = "autorun/XMV/"
+local BASE_DIR = "autorun/xmv/"
 for k,v in pairs(file.Find(BASE_DIR .. "*", "LUA")) do
     if SERVER then
         AddCSLuaFile(BASE_DIR .. v)
