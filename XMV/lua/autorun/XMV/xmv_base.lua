@@ -3,6 +3,8 @@ ENT = {}
 ENT.Type = "anim"
 ENT.Base = "base_entity"
 ENT.ClassName = "xmv_base"
+ENT.PrintName = "Base XMV"
+ENT.Spawnable = true
 ENT.RenderGroup = RENDERGROUP_OPAQUE
 function ENT:Initialize()
 	if(SERVER) then
@@ -215,10 +217,9 @@ function ENT:AssignPlayer(ply, driver)
 			if(ply == self:GetDriver()) then
 				ply:SetActiveWeapon(nil)
 				self:OnMove(ply, data)
-				--[[if true then
+				--[=[if ply:KeyDown(IN_ATTACK) then
 					self:FireTurrets()
-				end]]
-				
+				end]=]
 			end
 		end)
 		
@@ -414,8 +415,8 @@ if(CLIENT) then
 				self.CameraDist = math.Clamp( self.CameraDist, 2, 6 )
 				self.CameraDistVel = math.Approach( self.CameraDistVel, 0, self.CameraDistVel * FrameTime() * 2 )
 
-				--cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK)))
-				--cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK2)))
+				cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK)))
+				cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK2)))
 				
 				
 				cmd:ClearMovement()
@@ -519,13 +520,13 @@ else
 	end
 	
 	function ENT:StartTouch(entity)
-		if entity:GetClass() == "gmod_turret" then
+		--[=[if entity:GetClass() == "gmod_turret" then
 			SafeRemoveEntity(entity)
 			if self:GetTurretCount() == 0 then
 				self:SetHealth(self:GetMaxHealth())
 			end
 			self:SetTurretCount(self:GetTurretCount() + 1)
-		end
+		end]=]
 	end
 
 	function ENT:Use(ply, call)
