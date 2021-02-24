@@ -1,7 +1,7 @@
 ENT = {}
 ENT.Type = "anim"
 ENT.Base = "xmv_base"
-ENT.ClassName = "xmv_car"
+ENT.ClassName = "xmv_ufo"
 ENT.Spawnable = true
 ENT.PrintName = "UFO"
 ENT.RenderGroup = RENDERGROUP_OPAQUE
