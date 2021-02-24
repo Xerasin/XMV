@@ -280,7 +280,6 @@ if CLIENT then
 
 		for k,v in pairs(self.tracks or {}) do
 			local function DrawMesh(mesh, vec, ang)
-				print(mesh)
 				render.OverrideDepthEnable( true, true )
 					local mat = Matrix()
 					mat:Translate(vec)
