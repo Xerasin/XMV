@@ -245,7 +245,7 @@ function ENT:AssignPlayer(ply, driver)
 
 				if key == IN_ATTACK2 and (not self.nexthonk or self.nexthonk < RealTime()) then
 					sound.Play(self.HonkSound or "ambient/alarms/klaxon1.wav", self:GetPos(), 75, 200)
-					self.nexthonk = RealTime() + 2.5
+					self.nexthonk = RealTime() + 5
 				end
 				self:OnKeyPress(oPly, key)
 			end
