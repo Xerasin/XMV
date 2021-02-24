@@ -116,6 +116,10 @@ function ENT:Initialize()
 		"  Keyboard Mode Controls  ",
 		{},
 		{
+			Key = IN_FORWARD,
+			Name = "Go Forward"
+		},
+		{
 			Key = IN_JUMP,
 			Name = "Move Up"
 		},
