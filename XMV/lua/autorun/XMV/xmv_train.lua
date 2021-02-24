@@ -6,6 +6,8 @@ ENT.ClassName = "xmv_train"
 ENT.PrintName = "Train"
 ENT.Spawnable = true
 ENT.RenderGroup = RENDERGROUP_OPAQUE
+ENT.HonkSound = "ambient/alarms/train_horn2.wav"
+
 local track_length = 3
 local max_track_length = 20
 local max_track_length_cl = 200
@@ -246,10 +248,6 @@ function ENT:OnMove(ply, data)
 				self:GetDriver():ChatPrint"Mouse Steering"
 				self:SetMode(2)
 			end
-		end
-		if ply:KeyDown(IN_ATTACK2) and not ply:KeyDownLast(IN_ATTACK2) and (not self.nexthonk or self.nexthonk < RealTime()) then
-			sound.Play("ambient/alarms/train_horn2.wav",self:GetPos(),75,200)
-			self.nexthonk = RealTime() + 5
 		end
 		if ang then
 
