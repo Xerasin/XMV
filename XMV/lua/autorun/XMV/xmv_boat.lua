@@ -6,6 +6,7 @@ ENT.ClassName = "xmv_boat"
 ENT.PrintName = "Boat"
 ENT.Spawnable = true
 ENT.RenderGroup = RENDERGROUP_OPAQUE
+ENT.Forward = -90
 local scale = 0.4
 local propeller_pos = Vector(-20, 0, -6)
 local propeller_ang = 12.5

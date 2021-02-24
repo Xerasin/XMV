@@ -6,6 +6,7 @@ ENT.ClassName = "xmv_melon"
 ENT.PrintName = "Melon"
 ENT.Spawnable = true
 ENT.RenderGroup = RENDERGROUP_OPAQUE
+ENT.Forward = 0
 function ENT:Initialize()
 	if SERVER then
 		self:SetModel("models/props_junk/watermelon01.mdl")

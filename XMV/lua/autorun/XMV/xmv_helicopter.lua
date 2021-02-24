@@ -6,6 +6,7 @@ ENT.ClassName = "xmv_helicopter"
 ENT.PrintName = "Helicopter"
 ENT.Spawnable = true
 ENT.RenderGroup = RENDERGROUP_OPAQUE
+ENT.Forward = 0
 -- Credits to LPine for code on how to use a shadow controller
 ENT.PhysShadowControl = {}
 ENT.PhysShadowControl.secondstoarrive  = 0.1 --SMALL NUMBERS

@@ -226,6 +226,12 @@ function ENT:AssignPlayer(ply, driver)
 			end
 		end)
 
+		local honkable = {
+			["func_door_rotating"] = true,
+			["prop_door_rotating"] = true,
+			["func_door"] = true,
+			["prop_testchamber_door"] = true,
+		}
 		hook.Add("KeyPress", self, function(_, oPly, key)
 			if not self:GetDriver() or not self:GetDriver():IsValid() then
 				self:Remove()
@@ -246,6 +252,15 @@ function ENT:AssignPlayer(ply, driver)
 				if key == IN_ATTACK2 and (not self.nexthonk or self.nexthonk < RealTime()) then
 					sound.Play(self.HonkSound or "ambient/alarms/klaxon1.wav", self:GetPos(), 75, 200)
 					self.nexthonk = RealTime() + 5
+
+					local dir = Angle(0, self:GetAngles().y, 0)
+					if self.Forward then dir.y = dir.y + self.Forward end
+
+					local trace = util.QuickTrace(self:GetPos() + Vector(0, 0, 10), dir:Forward() * 50, {self, self:GetDriver()})
+					if trace.Hit and not trace.HitWorld and IsValid(trace.Entity) and honkable[trace.Entity:GetClass()] then
+						local ent = trace.Entity
+						ent:Use(self:GetDriver(), self, USE_ON, 1)
+					end
 				end
 				self:OnKeyPress(oPly, key)
 			end

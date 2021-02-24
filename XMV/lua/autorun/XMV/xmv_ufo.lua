@@ -5,6 +5,7 @@ ENT.ClassName = "xmv_ufo"
 ENT.Spawnable = true
 ENT.PrintName = "UFO"
 ENT.RenderGroup = RENDERGROUP_OPAQUE
+ENT.Forward = 0
 
 function ENT:Initialize()
 

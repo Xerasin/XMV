@@ -6,6 +6,7 @@ ENT.ClassName = "xmv_train"
 ENT.PrintName = "Train"
 ENT.Spawnable = true
 ENT.RenderGroup = RENDERGROUP_OPAQUE
+ENT.Forward = 0
 ENT.HonkSound = "ambient/alarms/train_horn2.wav"
 
 local track_length = 3

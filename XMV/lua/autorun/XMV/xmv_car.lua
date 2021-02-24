@@ -6,6 +6,7 @@ ENT.ClassName = "xmv_car"
 ENT.Spawnable = true
 ENT.PrintName = "Car"
 ENT.RenderGroup = RENDERGROUP_OPAQUE
+ENT.Forward = -90
 local w = 8  --Width
 local l = 8  --Length
 --local h = 5  --Height
