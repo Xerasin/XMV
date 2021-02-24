@@ -1,4 +1,4 @@
-if(SERVER) then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 ENT = {}
 ENT.Type = "anim"
 ENT.Base = "xmv_base"
@@ -11,27 +11,26 @@ local max_track_length = 20
 local max_track_length_cl = 200
 -- Credits to LPine for code on how to use a shadow controller
 ENT.PhysShadowControl = {}
-ENT.PhysShadowControl.secondstoarrive  = 0.1 //SMALL NUMBERS
-ENT.PhysShadowControl.pos              = Vector(0, 0, 0)
-ENT.PhysShadowControl.angle            = Angle(0, 0, 0)
-ENT.PhysShadowControl.maxspeed         = 1000000000000
-ENT.PhysShadowControl.maxangular       = 1000000
-ENT.PhysShadowControl.maxspeeddamp     = 10000
+ENT.PhysShadowControl.secondstoarrive  = 0.1
+ENT.PhysShadowControl.pos			  = Vector(0, 0, 0)
+ENT.PhysShadowControl.angle			= Angle(0, 0, 0)
+ENT.PhysShadowControl.maxspeed		 = 1000000000000
+ENT.PhysShadowControl.maxangular	   = 1000000
+ENT.PhysShadowControl.maxspeeddamp	 = 10000
 ENT.PhysShadowControl.maxangulardamp   = 1000000
-ENT.PhysShadowControl.dampfactor       = 1
+ENT.PhysShadowControl.dampfactor	   = 1
 ENT.PhysShadowControl.teleportdistance = 0
-ENT.PhysShadowControl.deltatime        = deltatime
 
 function ENT:Initialize()
-    if(SERVER) then
+	if SERVER then
 		self:SetModel("models/props_trainstation/train001.mdl")
-		
- 
-		local min=Vector(-17, -4, -5)
-		local max=Vector(17, 4, 5)
+
+
+		local min = Vector(-17, -4, -5)
+		local max = Vector(17, 4, 5)
 		self:PhysicsInitBox(min,max)
 		--self:SetMoveType(MOVETYPE_NONE)
-		
+
 		self:DrawShadow(false)
 		local phys = self:GetPhysicsObject()
 		if (phys:IsValid()) then
@@ -40,17 +39,102 @@ function ENT:Initialize()
 			phys:SetMass(10)
 		end
 		self:SetCollisionBounds(min,max)
-		self:PhysWake()
+
 		self:SetUseType(SIMPLE_USE)
 		self.PhysShadowControl.angle = self:GetAngles()
 		self.PhysShadowControl.pos = self:GetPos()
 		self:SetMode(2)
 		self:StartMotionController()
-    end
+	end
 	self.AngOffset = Angle(0, 0, 0)
-	local t = Vector(-13752.9140625, 95.98560333252, 14304.03125)
 	self.tracks = {}
+
+
+	local mat1, mat2
+	if CLIENT then
+
+		local params = {}
+		params[ "$basetexture" ] = "phoenix_storms/iron_rails"
+		params[ "$vertexcolor" ] = 1
+
+		mat1 = CreateMaterial( "Track_Material" .. os.time(), "UnlitGeneric", params )
+
+		params = {}
+		params[ "$basetexture" ] = "phoenix_storms/wood"
+		params[ "$vertexcolor" ] = 1
+		mat2 = CreateMaterial( "Track_Material2" .. os.time(), "UnlitGeneric", params )
+	end
+
+	self.Models = {
+		{
+			Pos = Vector(0, 0, 0),
+			Ang = Angle(),
+			{
+				Type = "Prop",
+				Model = "models/props_trainstation/train001.mdl",
+				Scale = Vector(0.05, 0.05, 0.05),
+				Pos = Vector(0, 0, 0),
+				Ang = Angle(0, -90, 0),
+			},
+		},
+		{
+			ManualDraw = true,
+			Pos = Vector(0, 0, 0),
+			Ang = Angle(),
+			{
+				Type = "Mesh",
+				Mesh = xmv.BoxMesh(Vector(0, 0, 0), Vector(track_length, 0.3, 0.2)),
+				Material = mat1,
+				Pos = Vector(0, 0, 0),
+				Ang = Angle(0, 0, 0),
+			},
+		},
+		{
+			ManualDraw = true,
+			Pos = Vector(0, 0, 0),
+			Ang = Angle(),
+			{
+				Type = "Mesh",
+				Mesh = xmv.BoxMesh(Vector(-3.25, 0, 0), Vector(3.25, track_length * 0.3, 0.1)),
+				Material = mat2,
+				Pos = Vector(0, 0, 0),
+				Ang = Angle(0, 0, 0),
+			},
+		},
+	}
+
+	self.Controls = {
+		{
+			Key = IN_FORWARD,
+			Name = "Go Forward"
+		},
+		{
+			Key = IN_DUCK,
+			Name = "Change control method"
+		},
+		{},
+		"  Keyboard Mode Controls  ",
+		{},
+		{
+			Key = IN_JUMP,
+			Name = "Move Up"
+		},
+		{
+			Key = IN_SPEED,
+			Name = "Move Down"
+		},
+		{
+			Key = IN_MOVELEFT,
+			Name = "Go Left"
+		},
+		{
+			Key = IN_MOVERIGHT,
+			Name = "Go Riight"
+		},
+
+	}
 end
+
 function ENT:SetupDataTables2()
 	self:NetworkVar( "Int", 0, "Mode")
 end
@@ -84,38 +168,28 @@ function ENT:OnMove(ply, data)
 		end
 		local ang = nil
 		if self:GetMode() == 1 then
-			if(ply:KeyDown(IN_FORWARD)) then
+			if ply:KeyDown(IN_FORWARD) then
 				ang = Angle()
 				if ply:KeyDown(IN_JUMP) then
 					ang = Angle(-10, 0, 0)
 				elseif ply:KeyDown(IN_SPEED) then
 					ang = Angle(10, 0, 0)
 				end
-				
+
 			end
-			
-			if(ply:KeyDown(IN_BACK)) then
-				--[[ang = Angle(0, 180, 0)
-				if ply:KeyDown(IN_JUMP) then
-					ang = Angle(10, 0, 0)
-				elseif ply:KeyDown(IN_WALK) then
-					ang = Angle(-10, 0, 0)
-				end]]
-				
-			end
-			if(ply:KeyDown(IN_MOVELEFT)) then
+			if ply:KeyDown(IN_MOVELEFT) then
 				ang = Angle(0, 10, 0)
 			end
-			if(ply:KeyDown(IN_MOVERIGHT)) then
+			if ply:KeyDown(IN_MOVERIGHT) then
 				ang = Angle(0, -10, 0)
 			end
 		else
-			if(ply:KeyDown(IN_FORWARD)) then
+			if ply:KeyDown(IN_FORWARD) then
 				ang = ltrack[2]
 				local function GetPreferredRoute(ang1, ang2)
 					local tang1 = ang1 % 360
 					local tang2 = ang2 % 360
-					
+
 					local dif = tang2 - tang1
 					local abs_dif = math.abs(dif)
 					local resolved_dif = nil
@@ -126,14 +200,12 @@ function ENT:OnMove(ply, data)
 						--359, 0
 						local dif1 = (tang2 + 360) - tang1
 						local dist1 = math.abs(dif1)
-						
+
 						if abs_dif < dist1 then
 							resolved_dif = dif
-							
 						else
 							resolved_dif = dif1
 						end
-						
 					else
 						--0, 359
 						--0, 90
@@ -161,9 +233,6 @@ function ENT:OnMove(ply, data)
 				--print(ang.p, eyeang.p, ang_dif.x, pitch)
 				ang = Angle(pitch, yaw, math.Clamp(ang_dif.z, -10, 10))
 			end
-			if(ply:KeyDown(IN_BACK)) then
-				--ang = Angle(0, 180, 0)
-			end
 		end
 		if ply:KeyDown(IN_DUCK) and not ply:KeyDownLast(IN_DUCK) then
 			if self:GetMode() == 2 then
@@ -179,12 +248,11 @@ function ENT:OnMove(ply, data)
 			self.nexthonk = RealTime() + 5
 		end
 		if ang then
-			
+
 			local Tpos,Tang = LocalToWorld(Vector(track_length, 0, 0), ang, ltrack[1], ltrack[2])
 			--print(Tang, (ang + ltrack[2]))
 			Tang = ltrack[2] + ang
 			local trace = util.QuickTrace(Tpos, Tang:Forward():GetNormal() * track_length * 15, self)
-			local distance = trace.HitPos:Distance(trace.StartPos)
 			if not trace.Hit or true then
 				track = {}
 				track[1] = Tpos
@@ -197,104 +265,18 @@ function ENT:OnMove(ply, data)
 	end
 end
 
-if(CLIENT) then
-	function ENT:CreateModels()
-		local box = ClientsideModel("models/props_trainstation/train001.mdl", RENDERGROUP_OPAQUE)
-		box:SetNoDraw(true)
-		local mat = Matrix()
-		mat:Scale(Vector(0.05,0.05,0.05))
-		box:EnableMatrix("RenderMultiply", mat)
-		self.box = box
-		self.box:SetRenderOrigin(self:GetPos())
-		self.box:SetRenderAngles(self:GetAngles())
-		self.box:SetParent(self)
-		
-		local params = {}
-		params[ "$basetexture" ] = "phoenix_storms/iron_rails"
-		params[ "$vertexcolor" ] = 1
-		--params[ "$vertexalpha" ] = 1
-				
-		self.Mat = CreateMaterial( "Track_Material" .. os.time(), "UnlitGeneric", params )
-		
-		local params = {}
-		params[ "$basetexture" ] = "phoenix_storms/wood"
-		params[ "$vertexcolor" ] = 1
-		--params[ "$vertexalpha" ] = 1
-				
-		self.Mat2 = CreateMaterial( "Track_Material2" .. os.time(), "UnlitGeneric", params )
-		
-		local function ReturnMesh(v1, v2)
-			local col = Color(255, 255, 255)
-			local x,y,z,x2,y2,z2 = v1.x,v1.y,v1.z,v2.x,v2.y,v2.z
-			local tbl = {}
-			local ou,ov = 0,0
-			local u1,v1 = ou,ov
-			local u2,v2 = ou + 1, ov + 1
-			--
-			table.insert(tbl,{color = col, pos = Vector(x, y, z2),  u = u1, v = v1})
-			table.insert(tbl,{color = col, pos = Vector(x, y2, z2),  u = u1, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x2, y2, z2),  u = u2, v = v2})
-					
-			table.insert(tbl,{color = col, pos = Vector(x, y, z2),  u = u1, v = v1})
-			table.insert(tbl,{color = col, pos = Vector(x2, y2, z2),  u = u2, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x2, y, z2),  u = u2, v = v1})
-			--
-			table.insert(tbl,{color = col, pos = Vector(x, y2, z),  u = u1, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x, y, z),  u = u1, v = v1})
-			table.insert(tbl,{color = col, pos = Vector(x2, y2, z),  u = u2, v = v2})
-				
-			table.insert(tbl,{color = col, pos = Vector(x, y, z),  u = u1, v = v1})
-			table.insert(tbl,{color = col, pos = Vector(x2, y, z),  u = u2, v = v1})
-			table.insert(tbl,{color = col, pos = Vector(x2, y2, z),  u = u2, v = v2})
-			--
-			table.insert(tbl,{color = col, pos = Vector(x, y, z),  u = u2, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x, y2, z),  u = u1, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x, y2, z2),  u = u1, v = v1})
-			
-			table.insert(tbl,{color = col, pos = Vector(x, y, z2),  u = u2, v = v1})
-			table.insert(tbl,{color = col, pos = Vector(x, y, z),  u = u2, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x, y2, z2),  u = u1, v = v1})
-			--
-			table.insert(tbl,{color = col, pos = Vector(x2, y2, z),  u = u2, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x2, y, z),  u = u1, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x2, y, z2),  u = u1, v = v1})
-			
-			table.insert(tbl,{color = col, pos = Vector(x2, y2, z2),  u = u2, v = v1})
-			table.insert(tbl,{color = col, pos = Vector(x2, y2, z),  u = u2, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x2, y, z2),  u = u1, v = v1})
-			--
-			table.insert(tbl,{color = col, pos = Vector(x2, y, z),  u = u2, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x, y, z),  u = u1, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x, y, z2),  u = u1, v = v1})
-			
-			table.insert(tbl,{color = col, pos = Vector(x2, y, z2),  u = u2, v = v1})
-			table.insert(tbl,{color = col, pos = Vector(x2, y, z),  u = u2, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x, y, z2),  u = u1, v = v1})
-			--
-			table.insert(tbl,{color = col, pos = Vector(x, y2, z),  u = u1, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x2, y2, z),  u = u2, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x, y2, z2),  u = u1, v = v1})
-			
-			table.insert(tbl,{color = col, pos = Vector(x2, y2, z),  u = u2, v = v2})
-			table.insert(tbl,{color = col, pos = Vector(x2, y2, z2),  u = u2, v = v1})
-			table.insert(tbl,{color = col, pos = Vector(x, y2, z2),  u = u1, v = v1})
-			--
-			
-			
-			return tbl
-		end
-		self.Rail = Mesh()
-		self.Rail:BuildFromTriangles(ReturnMesh(Vector(0, 0, 0), Vector(track_length, 0.3, 0.2)))
-		
-		self.WoodenPart = Mesh()
-		self.WoodenPart:BuildFromTriangles(ReturnMesh(Vector(-3.25, 0, 0), Vector(3.25, track_length * 0.3, 0.1)))
-	end
-	
+if CLIENT then
 	function ENT:Draw()
-		if not self.box or not self.box:IsValid() then self:CreateModels() end
-		local ltrack = nil
+		if not self.Models then return end
+		if not self.Models[1].Created then return self:CreateXMVModels() end
+
+		self.Rail, self.WoodenPart = self.Models[2][1].MeshObject, self.Models[3][1].MeshObject
+		local railMat, woodMat = self.Models[2][1].Material, self.Models[3][1].Material
+		if not self.Rail or not self.WoodenPart then return end
+
 		for k,v in pairs(self.tracks or {}) do
 			local function DrawMesh(mesh, vec, ang)
+				print(mesh)
 				render.OverrideDepthEnable( true, true )
 					local mat = Matrix()
 					mat:Translate(vec)
@@ -304,55 +286,53 @@ if(CLIENT) then
 					cam.PopModelMatrix()
 				render.OverrideDepthEnable( false, false )
 			end
+
 			local pos = v[1]
-			local pos2 = v[1] + v[2]:Forward() * track_length
 			local ang = v[2]
-			
+
 			--[[render.DrawLine( pos, pos + ang:Up(), Color(255, 0, 0), true )
 			render.DrawLine( pos, pos + ang:Right(), Color(0, 255, 0), true )
 			render.DrawLine( pos, pos + ang:Forward(), Color(0, 0, 255), true )]]
-			
+
 			local t = track_length * 0.25 - track_length * 0.15
-			render.SetMaterial(self.Mat2)
+			render.SetMaterial(woodMat)
 			local tang = Angle(ang.p, ang.y, ang.r)
 			tang:RotateAroundAxis(tang:Up(), -90)
-			
+
 			DrawMesh(self.WoodenPart, pos + ang:Forward() * t, tang)
-			local t = track_length * 0.75 - track_length * 0.15
+			t = track_length * 0.75 - track_length * 0.15
 			DrawMesh(self.WoodenPart, pos + ang:Forward() * t, tang)
-			
-			render.SetMaterial(self.Mat)
+
+			render.SetMaterial(railMat)
 			DrawMesh(self.Rail, pos + ang:Right() * 2 + ang:Up() * 0.05, ang)
 			DrawMesh(self.Rail, pos + ang:Right() * -2 + ang:Up() * 0.05, ang)
 		end
-		
-		self.box:SetRenderOrigin(self:GetPos())
-		local ang = self:GetAngles()
-		ang:RotateAroundAxis(ang:Up(), -90)
-		self.box:SetRenderAngles(ang)
-		self.box:DrawModel()
+
 		self.ang_off = self.ang_off or 0
+		self:DrawModels()
+
 		self:DrawPlayer(Vector(10.0, 0, 3.25), Angle(0, 0, 0), 0.125, function(model)
 			local seq = model:SelectWeightedSequence(ACT_DRIVE_JEEP)
 			if model:GetSequence() ~= seq then
-		        model:ResetSequence(seq)
-		    end
-			local ang
+				model:ResetSequence(seq)
+			end
+			local newAng
 			if not self.LastAng then self.LastAng = self:GetAngles() end
 			if self.LastAng then
 				local tang = math.floor((self.LastAng.Y - self:GetAngles().Y) * 100) / 100
 				if tang == 0 then
-					ang = 0
+					newAng = 0
 				else
-					ang = math.Clamp(tang, -5, 5) * 3
+					newAng = math.Clamp(tang, -5, 5) * 3
 				end
 				self.LastAng = self:GetAngles()
 			end
-			if ang then
+
+			if newAng then
 				if not self.Steer then
-					self.Steer = ang
+					self.Steer = newAng
 				end
-				self.Steer = self.Steer + (ang - self.Steer) * 0.05
+				self.Steer = self.Steer + (newAng - self.Steer) * 0.05
 				model:SetPoseParameter( "vehicle_steer", self.Steer)
 			end
 		end)
@@ -364,16 +344,16 @@ if(CLIENT) then
 			ent.tracks = net.ReadTable()
 		end
 	end)
-	
+
 	net.Receive("TRAINTRACK_ADD", function(len)
 		local ent = net.ReadEntity()
-		
+
 		if ent and ent:IsValid() then
 			ent.tracks = ent.tracks or {}
-			local track = {}
-			track[1] = Vector(net.ReadDouble(), net.ReadDouble(), net.ReadDouble())
-			track[2] = Angle(net.ReadDouble(), net.ReadDouble(), net.ReadDouble())
-			table.insert(ent.tracks, track)
+			local newTrack = {}
+			newTrack[1] = Vector(net.ReadDouble(), net.ReadDouble(), net.ReadDouble())
+			newTrack[2] = Angle(net.ReadDouble(), net.ReadDouble(), net.ReadDouble())
+			table.insert(ent.tracks, newTrack)
 			if #ent.tracks > max_track_length_cl then
 				table.remove(ent.tracks, 1)
 			end
@@ -385,7 +365,6 @@ else
 	function ENT:PhysicsSimulate(phys, deltatime)
 		phys:Wake()
 		if #self.tracks > 10 then
-			
 			local track1 = self.tracks[#self.tracks - 8][2]
 			local track2 = self.tracks[#self.tracks - 8][2]
 			local ang = Angle((track1.p + track2.p) * 0.5, (track1.y + track2.y) * 0.5, (track1.r + track2.r) * 0.5)
@@ -406,8 +385,9 @@ else
 		self.PhysShadowControl.deltatime = deltatime
 		return phys:ComputeShadowControl(self.PhysShadowControl)
 	end
+
 	function ENT:SpawnFunction(ply,tr)
-		if ( !tr.Hit ) then return end
+		if not tr.Hit then return end
 		local ent = ents.Create( self.ClassName )
 		ent:SetPos( tr.HitPos + tr.HitNormal * 6 )
 		ent:Spawn()
@@ -415,6 +395,10 @@ else
 		return ent
 	end
 end
+
+function ENT:Think()
+	self:TickModels()
+end
 scripted_ents.Register(ENT, ENT.ClassName, true)
 
-list.Set('SpawnableEntities',ENT.ClassName,{["PrintName"] = ENT.PrintName, ["ClassName"] = ENT.ClassName, ["Spawnable"] = ENT.Spawnable, ["Category"] = "Xerasin's Micro Vehicles"})
+list.Set("SpawnableEntities",ENT.ClassName,{["PrintName"] = ENT.PrintName, ["ClassName"] = ENT.ClassName, ["Spawnable"] = ENT.Spawnable, ["Category"] = "Xerasin's Micro Vehicles"})
