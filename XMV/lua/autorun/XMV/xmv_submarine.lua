@@ -96,7 +96,7 @@ function ENT:Initialize()
 			},
 			Tick = function(curProp, vehicle)
 				if vehicle and vehicle.SpinAng and curProp.Ang then
-					curProp.Ang:RotateAroundAxis(Vector(1, 0, 0), vehicle.SpinAng)
+					curProp.Ang:RotateAroundAxis(Vector(1, 0, 0), vehicle.SpinAng * 3)
 				end
 			end
 		}

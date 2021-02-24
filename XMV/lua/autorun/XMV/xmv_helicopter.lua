@@ -88,7 +88,7 @@ function ENT:Initialize()
 			},
 			Tick = function(curProp, vehicle)
 				if vehicle and vehicle.SpinAng and curProp.Ang then
-					curProp.Ang:RotateAroundAxis(Vector(0, 0, 1), vehicle.SpinAng)
+					curProp.Ang:RotateAroundAxis(Vector(0, 0, 1), vehicle.SpinAng * 2)
 				end
 			end
 		},
@@ -250,7 +250,7 @@ function ENT:Draw()
 	if not self.Models[1].Created then return self:CreateXMVModels() end
 	self:DrawModels()
 
-	self.SpinAng = self:GetSpin() / 3
+	self.SpinAng = self:GetSpin()
 
 	self:DrawPlayer(Vector(10.0, 0, 3.25), Angle(0, 0, 0), 0.125, function(model)
 		local seq = model:SelectWeightedSequence(ACT_DRIVE_JEEP)

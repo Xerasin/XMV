@@ -61,13 +61,13 @@ function ENT:Initialize()
 			{
 				Type = "Prop",
 				Model = "models/props_c17/TrapPropeller_Blade.mdl",
-				Scale = Vector(0.15, 0.15, 0.15),
+				Scale = Vector(0.1, 0.1, 0.1),
 				Pos = Vector(-2.5, 0, 0),
 				Ang = Angle(-90, 0, 0),
 			},
 			Tick = function(curProp, vehicle)
 				if vehicle and vehicle.SpinAng and curProp.Ang then
-					curProp.Ang:RotateAroundAxis(Vector(1, 0, 0), vehicle.SpinAng / 2)
+					curProp.Ang:RotateAroundAxis(Vector(1, 0, 0), vehicle.SpinAng)
 				end
 			end
 		}
