@@ -767,9 +767,8 @@ else
 	end
 
 	function ENT:Use(ply, call)
-		if ply:IsPlayer()  and (not self:GetDriver() or not self:GetDriver():IsValid()) and not self.LastEnter or CurTime() - self.LastEnter > 1 then
+		if ply:IsPlayer() and not IsValid(self:GetDriver()) and (not self.LastEnter or CurTime() - self.LastEnter > 1) then
 			self:AssignPlayer(ply)
-
 		end
 	end
 	hook.Add("PlayerSpawn","XMV_CAR_REMOVE",function(ply)
