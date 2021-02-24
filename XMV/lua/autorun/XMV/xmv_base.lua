@@ -38,11 +38,21 @@ function ENT:CanProperty()
 end
 
 function ENT:Touch(ent)
-	if IsValid(ent) and ent:GetClass() == "trigger_teleport" then
-		SafeRemoveEntity(self)
+	if IsValid(ent)  then
+		if ent:GetClass() == "trigger_teleport" then
+			SafeRemoveEntity(self)
+		elseif ent:GetClass() == "trigger_multiple" then
+			ent:Fire("StartTouch", nil, 0, self, self:GetDriver())
+		end
 	end
 end
 
+
+function ENT:EndTouch(ent)
+	if IsValid(ent) and ent:GetClass() == "trigger_multiple" then
+		ent:Fire("EndTouch", nil, 0, self, self:GetDriver())
+	end
+end
 function ENT:SetupDataTables()
 	self:NetworkVar( "Entity", 0, "Driver")
 	self:NetworkVar( "Int", 14, "ViewMode")
@@ -155,6 +165,7 @@ function ENT:AssignPlayer(ply, driver)
 			rider:SetMoveType(MOVETYPE_WALK)
 			rider:SetActiveWeapon(self.BeforeActiveWeapon)
 
+			rider:SetParent(NULL)
 
 			for I = 0, 2 do
 				rider:DrawViewModel(true, I)
@@ -163,11 +174,13 @@ function ENT:AssignPlayer(ply, driver)
 			if rider.GetZone then
 				zone = rider:GetZone()
 			end
+
 			--rider:Spawn()
 			rider:SetPos(self:GetPos() + Vector(0,0,20))
 			if zone then
 				rider:SetZone(zone)
 			end
+
 			timer.Simple(0, function()
 				if IsValid(self) then
 					UnstuckPlayer(rider, self:GetAngles())
@@ -191,11 +204,12 @@ function ENT:AssignPlayer(ply, driver)
 		--ply:Spectate( OBS_MODE_CHASE )
 		ply:SpectateEntity(self)
 		ply:SetNWEntity("XMV_Vehicle", self)
-		ply:SetMoveType(MOVETYPE_NONE)
-		self:SetCollisionGroup(COLLISION_GROUP_WEAPON)
+		ply:SetMoveType(MOVETYPE_NOCLIP)
+
 		for I = 0,2 do
 			ply:DrawViewModel(false, I)
 		end
+
 		self.BeforeActiveWeapon = ply:GetActiveWeapon()
 		ply:SetActiveWeapon(nil)
 
