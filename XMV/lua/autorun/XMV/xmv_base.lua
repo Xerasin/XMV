@@ -410,7 +410,7 @@ function ENT:DrawModels()
 			local modelPos, modelAng = LocalToWorld(model.Pos, model.Ang, self:GetPos(), self:GetAngles())
 			if not model.ManualDraw then
 				for _, prop in ipairs(model) do
-					if not prop.ManualDraw and type(prop) == "table" and drawTypes[prop.Type] then 
+					if not prop.ManualDraw and type(prop) == "table" and drawTypes[prop.Type] then
 						drawTypes[prop.Type](prop, modelPos, modelAng)
 					end
 				end
@@ -813,3 +813,10 @@ end
 
 hook.Add("AllowPlayerPickup", "XMVAllowPlayerPickup", Deny)
 hook.Add("GravGunPickupAllowed", "XMVOnPhysgunPickup", Deny)
+hook.Add("PhysgunPickup", "XMVPhysgunPickup", function(ply, ent)
+	if IsValid(ent) and ent:IsPlayer() and IsValid(ent:XMVGetVehicle()) then
+		return false
+	end
+end)
+
+
