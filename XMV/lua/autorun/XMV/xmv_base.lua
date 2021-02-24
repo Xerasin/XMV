@@ -41,8 +41,9 @@ function ENT:Touch(ent)
 	if IsValid(ent)  then
 		if ent:GetClass() == "trigger_teleport" then
 			SafeRemoveEntity(self)
-		elseif ent:GetClass() == "trigger_multiple" then
+		elseif ent:GetClass() == "trigger_multiple" and not ent.xmvTouched then
 			ent:Fire("StartTouch", nil, 0, self, self:GetDriver())
+			ent.xmvTouched = true
 		end
 	end
 end
@@ -51,6 +52,7 @@ end
 function ENT:EndTouch(ent)
 	if IsValid(ent) and ent:GetClass() == "trigger_multiple" then
 		ent:Fire("EndTouch", nil, 0, self, self:GetDriver())
+		ent.xmvTouched = nil
 	end
 end
 function ENT:SetupDataTables()
