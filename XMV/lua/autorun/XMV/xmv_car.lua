@@ -54,7 +54,7 @@ function ENT:Initialize()
 			}
 		},
 		{
-			Pos = Vector(), Ang = Angle(), DrawManual = true,
+			Pos = Vector(), Ang = Angle(), ManualDraw = true,
 			{
 				Type = "Prop",
 				Model = "models/props_vehicles/carparts_wheel01a.mdl",

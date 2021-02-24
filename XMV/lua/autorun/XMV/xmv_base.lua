@@ -280,6 +280,9 @@ local createTypes = {
 		prop.Entity = ClientsideModel(prop.Model, RENDERGROUP_OPAQUE)
 		prop.Entity:SetNoDraw(true)
 
+		local mat = Matrix()
+		mat:Scale(prop.Scale)
+		prop.Entity:EnableMatrix("RenderMultiply", mat)
 
 		if prop.Color then prop.Entity:SetColor(prop.Color) end
 	end,
@@ -314,6 +317,7 @@ local drawTypes = {
 			prop.Entity:SetColor(prop.Color)
 		end
 
+		prop.Entity:SetNoDraw(true)
 		prop.Entity:SetPos(propPos)
 		prop.Entity:SetAngles(propAng)
 		prop.Entity:SetRenderOrigin(propPos)
@@ -406,7 +410,7 @@ function ENT:DrawModels()
 			local modelPos, modelAng = LocalToWorld(model.Pos, model.Ang, self:GetPos(), self:GetAngles())
 			if not model.ManualDraw then
 				for _, prop in ipairs(model) do
-					if type(prop) == "table" and drawTypes[prop.Type] and not prop.ManualDraw then
+					if not prop.ManualDraw and type(prop) == "table" and drawTypes[prop.Type] then 
 						drawTypes[prop.Type](prop, modelPos, modelAng)
 					end
 				end
@@ -800,3 +804,12 @@ hook.Add("PlayerSpawn", "XMVRespawnKick", function(ply)
 	end
 end)
 
+
+local function Deny(ply, ent)
+	if IsValid(ent) and ply:XMVGetVehicle() == ent then
+		return false
+	end
+end
+
+hook.Add("AllowPlayerPickup", "XMVAllowPlayerPickup", Deny)
+hook.Add("GravGunPickupAllowed", "XMVOnPhysgunPickup", Deny)
