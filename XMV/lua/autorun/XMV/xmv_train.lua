@@ -397,10 +397,6 @@ else
 		return ent
 	end
 end
-
-function ENT:Think()
-	self:TickModels()
-end
 scripted_ents.Register(ENT, ENT.ClassName, true)
 
 list.Set("SpawnableEntities",ENT.ClassName,{["PrintName"] = ENT.PrintName, ["ClassName"] = ENT.ClassName, ["Spawnable"] = ENT.Spawnable, ["Category"] = "Xerasin's Micro Vehicles"})

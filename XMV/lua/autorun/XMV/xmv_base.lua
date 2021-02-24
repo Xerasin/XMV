@@ -646,8 +646,8 @@ if CLIENT then
 			ply:SetNetworkOrigin(self:GetPos() - ply:GetViewOffset() + Vector(0, 0, 5) )
 		end
 
+		self:TickModels()
 		if self.CThink then self:CThink() end
-		self:NextThink(CurTime() + 0.01)
 	end
 	local binds = {
 		[IN_ATTACK] = "+attack",
@@ -742,18 +742,18 @@ else
 			--Temp Replace
 			SafeRemoveEntity(self)
 		end
-
 		if self:GetDriver() and self:GetDriver():IsValid() and not self:GetDriver():Alive() then
 			self:AssignPlayer()
 		end
 
 		if IsValid(self:GetDriver()) then
 			local ply = self:GetDriver()
+			if ply:GetPos():Distance(self:GetPos()) > 150 then
+				ply:SetPos(self:GetPos())
+			end
 			ply:SetNetworkOrigin(self:GetPos() - ply:GetViewOffset() + Vector(0, 0, 5) )
 		end
-
 		if self.CThink then self:CThink() end
-		self:NextThink(CurTime() + 0.01)
 	end
 
 	function ENT:StartTouch(entity)

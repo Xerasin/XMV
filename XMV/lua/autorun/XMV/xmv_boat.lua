@@ -220,7 +220,7 @@ if CLIENT then
 		self.SpinAng = self:GetSpin()
 	end
 
-	function ENT:Think()
+	function ENT:CThink()
 		self:TickModels()
 	end
 else
@@ -232,7 +232,7 @@ else
 		ent:Activate()
 		return ent
 	end
-	function ENT:Think()
+	function ENT:CThink()
 		local phys = self:GetPhysicsObject()
 		if phys and phys:IsValid() then
 			phys:SetBuoyancyRatio(0.065)

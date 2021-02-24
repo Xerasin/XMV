@@ -238,7 +238,7 @@ function ENT:OnMove(ply, data)
 	end
 end
 
-function ENT:Think()
+function ENT:CThink()
 	self:TickModels()
 
 	local phys = self:GetPhysicsObject()

@@ -231,8 +231,7 @@ function ENT:OnMove(ply, data)
 	end
 end
 
-function ENT:Think()
-	self:TickModels()
+function ENT:CThink()
 	if SERVER then
 		self:SetAngles(Angle())
 	end
