@@ -230,13 +230,16 @@ function ENT:OnMove(ply, data)
 	end
 end
 
+function ENT:OnKeyPress(ply, key)
+	if key == IN_WALK and (not self.nexthonk or self.nexthonk < RealTime()) then
+		sound.Play("ambient/alarms/klaxon1.wav",self:GetPos(),75,200)
+		self.nexthonk = RealTime() + 2.5
+	end
+end
+
 function ENT:Think()
 	self:TickModels()
 	if SERVER then
-		if not self.nexthonk or self.nexthonk < CurTime() then
-			sound.Play("ambient/alarms/klaxon1.wav",self:GetPos(), 75, 200)
-			self.nexthonk = CurTime() + 1
-		end
 		self:SetAngles(Angle())
 	end
 end

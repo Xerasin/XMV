@@ -229,7 +229,7 @@ function ENT:OnKeyPress(ply, key)
 
 	if key == IN_ATTACK2 and (not self.nexthonk or self.nexthonk < RealTime()) then
 		sound.Play("ambient/alarms/klaxon1.wav",self:GetPos(),75,200)
-		self.nexthonk = RealTime() + 5
+		self.nexthonk = RealTime() + 2.5
 	end
 	if key == IN_DUCK then
 		if self:GetMode() == 2 then
