@@ -570,8 +570,8 @@ if CLIENT then
 				xmvVeh.CameraDist = math.Clamp( xmvVeh.CameraDist, 2, 6 )
 				xmvVeh.CameraDistVel = math.Approach( xmvVeh.CameraDistVel, 0, xmvVeh.CameraDistVel * FrameTime() * 2 )
 
-				cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK)))
-				cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK2)))
+				--[[cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK)))
+				cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_ATTACK2)))]]
 
 				cmd:ClearMovement()
 			end
