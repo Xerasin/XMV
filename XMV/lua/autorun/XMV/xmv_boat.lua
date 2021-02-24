@@ -219,10 +219,6 @@ if CLIENT then
 
 		self.SpinAng = self:GetSpin()
 	end
-
-	function ENT:CThink()
-		self:TickModels()
-	end
 else
 	function ENT:SpawnFunction(ply,tr)
 		if not tr.Hit then return end

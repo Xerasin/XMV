@@ -239,8 +239,6 @@ function ENT:OnMove(ply, data)
 end
 
 function ENT:CThink()
-	self:TickModels()
-
 	local phys = self:GetPhysicsObject()
 	if phys and phys:IsValid() then
 		if self:IsInWater() then

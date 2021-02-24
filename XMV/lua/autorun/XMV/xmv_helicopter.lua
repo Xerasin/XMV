@@ -237,9 +237,7 @@ function ENT:OnMove(ply, data)
 	end
 end
 
-
 function ENT:CThink()
-	self:TickModels()
 	if SERVER and not IsValid(self:GetDriver())  then
 		self:SetSpin(0)
 	end
