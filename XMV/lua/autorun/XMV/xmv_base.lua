@@ -645,8 +645,9 @@ if CLIENT then
 
 			return string.sub(keyName, 1, 1):upper() .. string.sub(keyName, 2):lower()
 		end
-		return ""
+		return "???"
 	end
+
 	function ENT:DrawControls()
 		if not self.Controls then return end
 		local y = 0
