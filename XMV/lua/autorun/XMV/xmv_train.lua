@@ -162,6 +162,47 @@ function ENT:NetworkAdd(tab)
 		net.WriteDouble(tab[2].r)
 	net.Broadcast()
 end
+
+local function GetPreferredRoute(ang1, ang2)
+	local tang1 = ang1 % 360
+	local tang2 = ang2 % 360
+
+	local dif = tang2 - tang1
+	local abs_dif = math.abs(dif)
+	local resolved_dif = nil
+	--359, 0 == 359
+	--0, 359 = -359
+	--print(tang1, " - ", tang2, " = ", dif)
+	if tang1 > tang2 then
+		--359, 0
+		local dif1 = (tang2 + 360) - tang1
+		local dist1 = math.abs(dif1)
+
+		if abs_dif < dist1 then
+			resolved_dif = dif
+		else
+			resolved_dif = dif1
+		end
+	else
+		--0, 359
+		--0, 90
+		local dif1 = tang2 - (tang1 + 360)
+		local dist1 = math.abs(dif1)
+		if abs_dif < dist1 then
+			resolved_dif = dif
+		else
+			resolved_dif = dif1
+		end
+		--print(tang1, tang2, abs_dif, dist1, dif, dif1, resolved_dif)
+	end
+	if resolved_dif then
+		--print(resolved_dif)
+		return math.Clamp(resolved_dif, -10, 10)
+	else
+		return 0
+	end
+end
+
 function ENT:OnMove(ply, data)
 	if not self.LastMove or self.LastMove + 0.01 < CurTime() then
 		if #self.tracks > max_track_length then
@@ -193,45 +234,6 @@ function ENT:OnMove(ply, data)
 		else
 			if ply:KeyDown(IN_FORWARD) then
 				ang = ltrack[2]
-				local function GetPreferredRoute(ang1, ang2)
-					local tang1 = ang1 % 360
-					local tang2 = ang2 % 360
-
-					local dif = tang2 - tang1
-					local abs_dif = math.abs(dif)
-					local resolved_dif = nil
-					--359, 0 == 359
-					--0, 359 = -359
-					--print(tang1, " - ", tang2, " = ", dif)
-					if tang1 > tang2 then
-						--359, 0
-						local dif1 = (tang2 + 360) - tang1
-						local dist1 = math.abs(dif1)
-
-						if abs_dif < dist1 then
-							resolved_dif = dif
-						else
-							resolved_dif = dif1
-						end
-					else
-						--0, 359
-						--0, 90
-						local dif1 = tang2 - (tang1 + 360)
-						local dist1 = math.abs(dif1)
-						if abs_dif < dist1 then
-							resolved_dif = dif
-						else
-							resolved_dif = dif1
-						end
-						--print(tang1, tang2, abs_dif, dist1, dif, dif1, resolved_dif)
-					end
-					if resolved_dif then
-						--print(resolved_dif)
-						return math.Clamp(resolved_dif, -10, 10)
-					else
-						return 0
-					end
-				end
 				local eyeang = ply:EyeAngles()
 				local ang_dif = Vector(ang.p,ang.y,ang.r) - Vector(eyeang.p,eyeang.y,0)
 				local yaw = GetPreferredRoute(ang.y, eyeang.y)
