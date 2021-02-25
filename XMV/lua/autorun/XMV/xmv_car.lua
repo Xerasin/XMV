@@ -113,6 +113,47 @@ function ENT:SetupDataTables2()
 	self:NetworkVar( "Float", 0, "WheelDir")
 	self:NetworkVar( "Int", 1, "Mode")
 end
+
+local function GetPreferredRoute(ang1, ang2)
+	local tang1 = ang1 % 360
+	local tang2 = ang2 % 360
+
+	local dif = tang2 - tang1
+	local abs_dif = math.abs(dif)
+	local resolved_dif = nil
+	--359, 0 == 359
+	--0, 359 = -359
+	--print(tang1, " - ", tang2, " = ", dif)
+	if tang1 > tang2 then
+		--359, 0
+		local dif1 = (tang2 + 360) - tang1
+		local dist1 = math.abs(dif1)
+
+		if abs_dif < dist1 then
+			resolved_dif = dif
+		else
+			resolved_dif = dif1
+		end
+	else
+		--0, 359
+		--0, 90
+		local dif1 = tang2 - (tang1 + 360)
+		local dist1 = math.abs(dif1)
+		if abs_dif < dist1 then
+			resolved_dif = dif
+		else
+			resolved_dif = dif1
+		end
+		--print(tang1, tang2, abs_dif, dist1, dif, dif1, resolved_dif)
+	end
+	if resolved_dif then
+		--print(resolved_dif)
+		return resolved_dif
+	else
+		return 0
+	end
+end
+
 function ENT:OnMove(ply, data)
 	local phys = self:GetPhysicsObject()
 	if phys and phys:IsValid() then
@@ -142,45 +183,6 @@ function ENT:OnMove(ply, data)
 					phys:ApplyForceOffset(right * -1, self:GetPos() + forward * 20)
 				end
 			elseif self:GetMode() == 2 then
-				local function GetPreferredRoute(ang1, ang2)
-					local tang1 = ang1 % 360
-					local tang2 = ang2 % 360
-
-					local dif = tang2 - tang1
-					local abs_dif = math.abs(dif)
-					local resolved_dif = nil
-					--359, 0 == 359
-					--0, 359 = -359
-					--print(tang1, " - ", tang2, " = ", dif)
-					if tang1 > tang2 then
-						--359, 0
-						local dif1 = (tang2 + 360) - tang1
-						local dist1 = math.abs(dif1)
-
-						if abs_dif < dist1 then
-							resolved_dif = dif
-						else
-							resolved_dif = dif1
-						end
-					else
-						--0, 359
-						--0, 90
-						local dif1 = tang2 - (tang1 + 360)
-						local dist1 = math.abs(dif1)
-						if abs_dif < dist1 then
-							resolved_dif = dif
-						else
-							resolved_dif = dif1
-						end
-						--print(tang1, tang2, abs_dif, dist1, dif, dif1, resolved_dif)
-					end
-					if resolved_dif then
-						--print(resolved_dif)
-						return resolved_dif
-					else
-						return 0
-					end
-				end
 				local angle = self:GetAngles()
 				local angVel = phys:GetAngleVelocity()
 				local yaw = GetPreferredRoute(angle.y, ply:EyeAngles().Y + 90)

@@ -37,24 +37,12 @@ function ENT:CanProperty()
 	return false
 end
 
-function ENT:Touch(ent)
-	if IsValid(ent)  then
-		if ent:GetClass() == "trigger_teleport" then
-			SafeRemoveEntity(self)
-		elseif ent:GetClass() == "trigger_multiple" and not ent.xmvTouched then
-			ent:Fire("StartTouch", nil, 0, self, self:GetDriver())
-			ent.xmvTouched = true
-		end
+function ENT:StartTouch(ent)
+	if IsValid(ent) and ent:GetClass() == "trigger_teleport" then
+		SafeRemoveEntity(self)
 	end
 end
 
-
-function ENT:EndTouch(ent)
-	if IsValid(ent) and ent:GetClass() == "trigger_multiple" then
-		ent:Fire("EndTouch", nil, 0, self, self:GetDriver())
-		ent.xmvTouched = nil
-	end
-end
 function ENT:SetupDataTables()
 	self:NetworkVar( "Entity", 0, "Driver")
 	self:NetworkVar( "Int", 14, "ViewMode")
@@ -65,89 +53,14 @@ function ENT:SetupDataTables()
 end
 
 function ENT:SetupDataTables2()
-	--Filler
 end
+
 function ENT:OnMove(ply, data)
-
-
 end
+
 function ENT:OnKeyPress(ply, key)
 end
 
-local t = {start = nil, endpos = nil, mask = MASK_PLAYERSOLID, filter = nil}
-local function PlayerNotStuck(ply, pos)
-
-	t.start = pos or ply:GetPos()
-	t.endpos = t.start
-	t.filter = ply
-	return util.TraceEntity(t,ply).StartSolid == false
-
-end
-
-local function FindPassableSpace( ply, direction, step )
-	local OldPos = ply:GetPos()
-	local i = 0
-	local origin = ply:GetPos()
-	while ( i < 14 ) do
-		origin = origin + step * direction
-		if ( PlayerNotStuck( ply , origin) ) then
-			return true, origin
-		end
-		i = i + 1
-	end
-	--ply:SetPos(OldPos)
-	return false, OldPos
-end
-
-local function UnstuckPlayer( pl , ang)
-	local ply = pl
-
-	NewPos = ply:GetPos()
-	local OldPos = NewPos
-	if  not PlayerNotStuck( ply )  then
-		local angle = ang or ply:GetAngles()
-
-		local forward = angle:Forward()
-		local right = angle:Right()
-		local up = angle:Up()
-
-		local SearchScale = 1
-		local found
-		found, NewPos = FindPassableSpace(  pl, forward, -SearchScale )
-		if not found then
-			found, NewPos = FindPassableSpace(  pl, right, SearchScale )
-			if  not found  then
-				found, NewPos = FindPassableSpace(  pl, right, -SearchScale )
-				if  not found  then
-					found, NewPos = FindPassableSpace(  pl, up, SearchScale )
-					if  not found  then
-						found, NewPos = FindPassableSpace(  pl, up, -SearchScale )
-						if not found  then
-							found, NewPos = FindPassableSpace(  pl, forward, SearchScale )
-							if not found  then
-								return false
-							end
-						end
-					end
-				end
-			end
-		end
-
-		if OldPos == NewPos then
-			return true -- ???
-		else
-			ply:SetPos( NewPos )
-			if SERVER and ply and ply:IsValid() and ply:GetPhysicsObject():IsValid() then
-				if ply:IsPlayer() then
-					ply:SetVelocity(vector_origin)
-				end
-				ply:GetPhysicsObject():SetVelocity(vector_origin) -- For some reason setting origin MAY apply some velocity so we're resetting it here.
-			end
-			return true
-		end
-
-	end
-end
 function ENT:AssignPlayer(ply, driver)
 	local rider = driver or self:GetDriver()
 	if self:GetDriver() and self:GetDriver():IsValid() then
@@ -184,9 +97,7 @@ function ENT:AssignPlayer(ply, driver)
 			end
 
 			timer.Simple(0, function()
-				if IsValid(self) then
-					UnstuckPlayer(rider, self:GetAngles())
-				end
+				xmv.UnstuckPlayer(rider)
 			end)
 			--rider:GetViewModel():SetNoDraw(false)
 			self:SetDriver(NULL)
@@ -760,21 +671,12 @@ else
 		if self.CThink then self:CThink() end
 	end
 
-	function ENT:StartTouch(entity)
-		--[=[if entity:GetClass() == "gmod_turret" then
-			SafeRemoveEntity(entity)
-			if self:GetTurretCount() == 0 then
-				self:SetHealth(self:GetMaxHealth())
-			end
-			self:SetTurretCount(self:GetTurretCount() + 1)
-		end]=]
-	end
-
 	function ENT:Use(ply, call)
 		if ply:IsPlayer() and not IsValid(self:GetDriver()) and (not self.LastEnter or CurTime() - self.LastEnter > 1) then
 			self:AssignPlayer(ply)
 		end
 	end
+
 	hook.Add("PlayerSpawn","XMV_CAR_REMOVE",function(ply)
 		local car = ply:XMVGetVehicle()
 		if car and car:IsValid() then -- Assume they are in a car
