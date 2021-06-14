@@ -45,3 +45,4 @@ lastcommit.txt
 tests/*.lua
 .vscode/*.json
 *.py
+workshop.json
