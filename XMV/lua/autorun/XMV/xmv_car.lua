@@ -115,7 +115,8 @@ end
 
 function ENT:AreWheelsTouching()
 	local normal = self:GetAngles():Up() * -1
-	local trace = util.QuickTrace(self:GetPos(),normal * 200,{self})
+	local trace = util.QuickTrace(self:GetPos(),normal * 25, {self, self:GetDriver()})
+
 	return trace, trace.StartPos:Distance(trace.HitPos) <= 5
 end
 
