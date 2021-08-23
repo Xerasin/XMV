@@ -38,7 +38,7 @@ function ENT:Initialize()
 				Type = "Prop",
 				Model = "models/props_borealis/bluebarrel001.mdl",
 				Scale = Vector(0.4, 0.4, 0.4),
-				Color = Color(255, 255, 150, 255),
+				Color = Color(255, 255, 255, 255),
 				Pos = Vector(0, 0, 0),
 				Ang = Angle(90, 0, 0),
 			},
@@ -46,18 +46,30 @@ function ENT:Initialize()
 				Type = "Prop",
 				Model = "models/props_combine/breenchair.mdl",
 				Scale = Vector(0.11, 0.11, 0.11),
-				Color = Color(255, 255, 150, 255),
+				Color = Color(255, 255, 255, 255),
 				Pos = Vector(12, 0, -2),
 				Ang = Angle(0, 0, 0),
+			},
+			{
+				Type = "Player",
+				Scale = Vector(0.11, 0.11, 0.11),
+				Pos = Vector(11, 0, 0), 
+				Ang = Angle(0, 0, 0)
 			},
 			{
 				Type = "Prop",
 				Model = "models/props_phx/construct/windows/window_dome360.mdl",
 				Scale = Vector(0.11, 0.11, 0.11),
-				Color = Color(255, 255, 150, 255),
+				Color = Color(255, 255, 255, 255),
 				Pos = Vector(10, 0, 0),
 				Ang = Angle(90, 0, 0),
-			}
+			},
+			{
+				Type = "PlayerName",
+				Scale = 0.1,
+				Pos = Vector(-2, 5.9, 2), 
+				Ang = Angle(0, 180, 90),
+			},
 		},
 		{
 			Pos = Vector(-11, 0, 0),
@@ -66,7 +78,7 @@ function ENT:Initialize()
 				Type = "Prop",
 				Model = "models/props_c17/TrapPropeller_Blade.mdl",
 				Scale = Vector(0.11, 0.11, 0.11),
-				Color = Color(255, 255, 150, 255),
+				Color = Color(255, 255, 255, 255),
 				Pos = Vector(0, 0, 0),
 				Ang = Angle(0, 0, 0),
 			},
@@ -74,7 +86,7 @@ function ENT:Initialize()
 				Type = "Prop",
 				Model = "models/props_c17/TrapPropeller_Blade.mdl",
 				Scale = Vector(0.11, 0.11, 0.11),
-				Color = Color(255, 255, 150, 255),
+				Color = Color(255, 255, 255, 255),
 				Pos = Vector(0, 0, 0),
 				Ang = Angle(0, 90, 0),
 			},
@@ -82,7 +94,7 @@ function ENT:Initialize()
 				Type = "Prop",
 				Model = "models/props_c17/TrapPropeller_Blade.mdl",
 				Scale = Vector(0.11, 0.11, 0.11),
-				Color = Color(255, 255, 150, 255),
+				Color = Color(255, 255, 255, 255),
 				Pos = Vector(0, 0, 0),
 				Ang = Angle(0, 180, 0),
 			},
@@ -90,7 +102,7 @@ function ENT:Initialize()
 				Type = "Prop",
 				Model = "models/props_c17/TrapPropeller_Blade.mdl",
 				Scale = Vector(0.11, 0.11, 0.11),
-				Color = Color(255, 255, 150, 255),
+				Color = Color(255, 255, 255, 255),
 				Pos = Vector(0, 0, 0),
 				Ang = Angle(0, 270, 0),
 			},
@@ -265,32 +277,6 @@ if CLIENT then
 		self:DrawModels()
 
 		self.SpinAng = self:GetSpin()
-		self:DrawPlayer(Vector(11, 0, 0), Angle(0, 0, 0), 0.11, function(model)
-			local seq = model:SelectWeightedSequence(ACT_DRIVE_JEEP)
-			if model:GetSequence() ~= seq then
-				model:ResetSequence(seq)
-			end
-			local newAng
-			if not self.LastAng then self.LastAng = self:GetAngles() end
-			if self.LastAng then
-				local tang = math.floor((self.LastAng.Y - self:GetAngles().Y) * 100) / 100
-				if tang == 0 then
-					newAng = 0
-				else
-					newAng = math.Clamp(tang, -5, 5) * 3
-				end
-				self.LastAng = self:GetAngles()
-			end
-			if newAng then
-				if not self.Steer then
-					self.Steer = newAng
-				end
-				self.Steer = self.Steer + (newAng - self.Steer) * 0.05
-				model:SetPoseParameter( "vehicle_steer", self.Steer)
-			end
-		end)
-
-		self:DrawPlayerName(Vector(-2, 5.9, 2), Angle(0, 180, 90), 0.1)
 	end
 else
 	function ENT:SpawnFunction(ply,tr)

@@ -24,7 +24,18 @@ function ENT:Initialize()
 		self:SetUseType(SIMPLE_USE)
 	end
 	self.AngOffset = Angle(0, 0, 0)
-
+	self.Models = {
+		{
+			Pos = Vector(),
+			Ang = Angle(),
+			{
+				Type = "PlayerName",
+				Scale = 0.2,
+				Pos = Vector(0, 0, 8), 
+				Ang = Angle(0, 90, 0),
+			}
+		}
+	}
 	self.Controls = {
 		{
 			Key = IN_JUMP,
@@ -105,7 +116,10 @@ end
 if CLIENT then
 	function ENT:Draw()
 		self:DrawModel()
-		self:DrawPlayerName(Vector(0, 0, 8), Angle(0, 90, 0), 0.2)
+
+		if not self.Models then return end
+		if not self.Models[1].Created then return self:CreateXMVModels() end
+		self:DrawModels()
 	end
 else
 	function ENT:SpawnFunction(ply,tr)

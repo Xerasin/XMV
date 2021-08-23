@@ -148,6 +148,23 @@ function ENT:Initialize()
 
 			TickType = "Rotate",
 			RotateAng = Angle(0, -32, 0),
+		},
+		{
+			Pos = Vector(),
+			Ang = Angle(),
+			{
+				Type = "PlayerName",
+				Scale = 0.2,
+				Pos = Vector(0, -1, 2.5), 
+				Ang = Angle(0, 0, 30),
+			},
+			{
+				Type = "Player",
+				Scale = Vector(0.125, 0.125, 0.125),
+				Pos = Vector(0, 3, 0.2),
+				Ang = Angle(0, -90, 0),
+				Steer = function() return 0 end
+			},
 		}
 	}
 
@@ -241,16 +258,6 @@ function ENT:Draw()
 	if not self.Models then return end
 	if not self.Models[1].Created then return self:CreateXMVModels() end
 	self:DrawModels()
-
-	self:DrawPlayer(Vector(0, 3, 0.2), Angle(0, -90, 0), 0.125, function(model)
-		local seq = model:SelectWeightedSequence(ACT_DRIVE_JEEP)
-		if model:GetSequence() ~= seq then
-			model:ResetSequence(seq)
-		end
-		model:SetPoseParameter( "vehicle_steer", 0 )
-	end)
-
-	self:DrawPlayerName(Vector(0, -1, 2.5), Angle(0, 0, 30), 0.2)
 end
 
 scripted_ents.Register(ENT, ENT.ClassName, true)

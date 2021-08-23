@@ -33,13 +33,6 @@ function ENT:Initialize()
 		self:PhysWake()
 		self:SetMode(2)
 		self:SetUseType(SIMPLE_USE)
-
-		self:SetTurretCount(3)
-		self.TurretPositions = {
-			{Vector(1.5, -3.5, 0), Angle(0, -90, 0), 0.2},
-			{Vector(-1.5, -3.5, 0), Angle(0, -90, 0), 0.2},
-			{Vector(0, -3.5, 1.5), Angle(0, -90, 0), 0.2}
-		}
 	end
 
 	self.Models = {
@@ -63,6 +56,23 @@ function ENT:Initialize()
 				Ang = Angle(0, -90, 0),
 			}
 		},
+		{
+			Pos = Vector(),
+			Ang = Angle(),
+			{
+				Type = "PlayerName",
+				Scale = 0.2,
+				Pos = Vector(0, 0, 2.5),
+				Ang = Angle(),
+			},
+			{
+				Type = "Player",
+				Scale = Vector(0.125, 0.125, 0.125),
+				Pos = Vector(0, 2, 1.0), 
+				Ang = Angle(0, -90, 0),
+				Steer = function(prop, veh) return veh.Steer or 0 end
+			},
+		}
 	}
 
 	self.Controls = {
@@ -273,15 +283,6 @@ if CLIENT then
 				wheelEntity:DrawModel()
 			end
 		end
-
-		self:DrawPlayer(Vector(0, 2, 1.0), Angle(0, -90, 0), 0.125, function(model)
-			local seq = model:SelectWeightedSequence(ACT_DRIVE_JEEP)
-			if model:GetSequence() ~= seq then
-		        model:ResetSequence(seq)
-		    end
-		    model:SetPoseParameter( "vehicle_steer", self.Steer * -1 )
-		end)
-		self:DrawPlayerName(Vector(0, 0, 2.5), Angle(), 0.2)
 	end
 else
 	function ENT:SpawnFunction(ply,tr)

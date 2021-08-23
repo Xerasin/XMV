@@ -27,8 +27,6 @@ function ENT:Initialize()
 		self.CameraDist 	= 4
 		self.CameraDistVel 	= 0.1
 	end
-	self.TurretPositions = {
-	}
 	self.AngOffset = Angle(0,90,0)
 end
 
@@ -46,9 +44,6 @@ end
 function ENT:SetupDataTables()
 	self:NetworkVar( "Entity", 0, "Driver")
 	self:NetworkVar( "Int", 14, "ViewMode")
-	self:NetworkVar( "Int", 0, "TurretCount")
-	self:NetworkVar( "Int", 0, "MaxHealth")
-	self:NetworkVar( "Int", 0, "Health")
 	self:SetupDataTables2()
 end
 
@@ -202,6 +197,11 @@ local createTypes = {
 		prop.MeshObject = Mesh()
 		prop.MeshObject:BuildFromTriangles(prop.Mesh)
 	end,
+	["Player"] = function(prop)
+		prop.Entity = ClientsideModel("models/player/skeleton.mdl", RENDERGROUP_OPAQUE)
+		prop.Entity:SetNoDraw(true)
+	end,
+	["PlayerName"] = function() end,
 }
 
 local tickTypes = {
@@ -210,6 +210,32 @@ local tickTypes = {
 	end
 }
 
+
+
+local function _BaseSteer(prop, vehicle)
+	local newAng
+	if not prop.LastAng then prop.LastAng = vehicle:GetAngles() end
+	if prop.LastAng then
+		local tang = math.floor((prop.LastAng.Y - vehicle:GetAngles().Y) * 100) / 100
+		if tang == 0 then
+			newAng = 0
+		else
+			newAng = math.Clamp(tang, -5, 5) * 3
+		end
+		prop.LastAng = vehicle:GetAngles()
+	end
+
+	if newAng then
+		if not vehicle.Steer then
+			prop.SteerAng = newAng
+		end
+
+		prop.SteerAng = prop.SteerAng + (newAng - prop.SteerAng) * 0.05
+		return prop.SteerAng
+	end
+
+	return 1
+end
 local drawTypes = {
 	["Prop"] = function(prop, modelPos, modelAng)
 		if not prop.Entity or not IsValid(prop.Entity) then return end
@@ -256,7 +282,58 @@ local drawTypes = {
 				prop.MeshObject:Draw()
 			cam.PopModelMatrix()
 		render.OverrideDepthEnable( false, false )
-	end
+	end,
+	["Player"] = function(prop, modelPos, modelAng, vehicle)
+		if not prop.Entity or not IsValid(prop.Entity) then return end
+		if not IsValid(vehicle:GetDriver()) then return end
+
+		local mat = Matrix()
+		mat:Scale(prop.Scale)
+		prop.Entity:EnableMatrix("RenderMultiply", mat)
+
+		local propPos, propAng = LocalToWorld(prop.Pos, prop.Ang, modelPos, modelAng)
+
+		if prop.Material then
+			prop.Entity:SetMaterial(prop.Material)
+		end
+
+		if prop.Color then
+			render.SetColorModulation(prop.Color.r / 255, prop.Color.g / 255, prop.Color.b / 255)
+			prop.Entity:SetColor(prop.Color)
+		end
+	
+
+		local propPos, propAng = LocalToWorld(prop.Pos, prop.Ang, modelPos, modelAng)
+		prop.Entity:SetModel(vehicle:GetDriver():GetModel())
+		prop.Entity:EnableMatrix("RenderMultiply", mat)
+		prop.Entity:SetRenderOrigin(propPos)
+		prop.Entity:SetRenderAngles(propAng)
+		prop.Entity:SetupBones()
+
+		local seq = prop.Entity:SelectWeightedSequence(ACT_DRIVE_JEEP)
+		if prop.Entity:GetSequence() ~= seq then
+			prop.Entity:ResetSequence(seq)
+		end
+		
+		prop.Entity:SetPoseParameter( "vehicle_steer", prop.Steer and prop:Steer(vehicle) or _BaseSteer(prop, vehicle))
+
+
+		prop.Entity:DrawModel()
+	end,
+	["PlayerName"] = function(prop, modelPos, modelAng, vehicle) 
+		local rider = vehicle:GetDriver()
+		local color = Color(255, 0, 0)
+		local text = "No Driver"
+		if rider and rider:IsValid() then
+			color = team.GetColor(rider:Team())
+			text = rider:Name()
+		end
+
+		local propPos, propAng = LocalToWorld(prop.Pos, prop.Ang, modelPos, modelAng)
+		cam.Start3D2D(propPos, propAng, prop.Scale)
+			draw.DrawText(text, "XMV_Player_Font", 0, 0, color, TEXT_ALIGN_CENTER )
+		cam.End3D2D()
+	end,
 }
 
 local removeType = {
@@ -269,6 +346,11 @@ local removeType = {
 		prop.MeshObject:Destroy()
 		prop.MeshObject = nil
 	end,
+	["Player"] = function(prop)
+		if not IsValid(prop.Entity) then return end
+		SafeRemoveEntity(prop.Entity)
+	end,
+	["PlayerName"] = function() end,
 }
 
 function ENT:CreateXMVModels()
@@ -322,23 +404,20 @@ function ENT:DrawModels()
 			if not model.ManualDraw then
 				for _, prop in ipairs(model) do
 					if not prop.ManualDraw and type(prop) == "table" and drawTypes[prop.Type] then
-						drawTypes[prop.Type](prop, modelPos, modelAng)
+						drawTypes[prop.Type](prop, modelPos, modelAng, self)
 					end
 				end
 			end
 		end
 	end
+
 	render.SetColorModulation(1, 1, 1)
+	render.SetBlend(1)
 end
 
 
 function ENT:OnRemove()
 	if CLIENT then
-		if IsValid(self.PlayerModel) then self.PlayerModel:Remove() end
-		if self.TurretModels then
-			for k,v in pairs(self.TurretModels) do v:Remove() end
-		end
-
 		if self.Models then
 			for _, model in pairs(self.Models) do
 				for _, prop in pairs(model) do
@@ -364,100 +443,8 @@ if CLIENT then
 		outline 	= false
 	} )
 
-	function ENT:DrawPlayerName(vector, angle, scale)
-		local pos,ang = LocalToWorld(vector, angle, self:GetPos(), self:GetAngles())
-
-		self:DrawPlayerName2(pos, ang, scale)
-	end
-	function ENT:DrawPlayer(vector, angle, scale, ...)
-		local pos,ang = LocalToWorld(vector, angle, self:GetPos(), self:GetAngles())
-		self:DrawPlayer2(pos, ang, scale, ...)
-	end
-
-	function ENT:DrawTurret(num, vector, angle, scale)
-		if not num then return end
-		if not self.TurretModels then self.TurretModels = {} end
-		if not self.TurretModels[num] then
-			local turret = ClientsideModel("models/weapons/w_smg1.mdl", RENDERGROUP_OPAQUE)
-			turret:SetNoDraw(true)
-			self.TurretModels[num] = turret
-
-			if type(scale) == "number" then
-				scale = Vector(1, 1, 1) * scale
-			end
-			local mat = Matrix()
-			mat:Scale(scale)
-			self.TurretModels[num]:EnableMatrix("RenderMultiply", mat)
-			self.TurretModels[num]:SetRenderOrigin(self:GetPos())
-			self.TurretModels[num]:SetRenderAngles(self:GetAngles())
-			self.TurretModels[num]:SetParent(self)
-		end
-
-		local function SetupModel(box, pos, ang)
-			box:SetRenderOrigin(pos)
-			box:SetRenderAngles(ang)
-		end
-
-		local pos, ang = LocalToWorld(vector, angle, self:GetPos(), self:GetAngles())
-		SetupModel(self.TurretModels[num], pos, ang)
-		self.TurretModels[num]:DrawModel()
-	end
-
-	function ENT:DrawPlayer2(vector, angle, scale, func)
-		if not IsValid(self:GetDriver()) then return end
-		local driver = self:GetDriver()
-		if not self.PlayerModel then
-			self.PlayerModel = ClientsideModel(driver:GetModel(), RENDERGROUP_OPAQUE)
-			self.PlayerModel:SetNoDraw(true)
-		end
-		local mat = Matrix()
-		mat:Scale(Vector(1, 1, 1) * scale)
-		self.PlayerModel:SetModel(driver:GetModel())
-		self.PlayerModel:EnableMatrix("RenderMultiply", mat)
-		self.PlayerModel:SetRenderOrigin(vector)
-		self.PlayerModel:SetRenderAngles(angle)
-		self.PlayerModel:SetupBones()
-
-		if func then
-			func(self.PlayerModel)
-		end
-
-		self.PlayerModel:DrawModel()
-	end
-
-	function ENT:DrawPlayerName2(vector, angle, scale)
-		local rider = self:GetDriver()
-		local color = Color(255,0,0)
-		local text = "No Driver"
-		if rider and rider:IsValid() then
-			color = team.GetColor(rider:Team())
-			text = rider:Name()
-		end
-		cam.Start3D2D(vector, angle, scale)
-			draw.DrawText(text, "XMV_Player_Font", 0, 0, color, TEXT_ALIGN_CENTER )
-		cam.End3D2D()
-	end
-	function ENT:DrawTurrets()
-		local turretCount = self:GetTurretCount()
-		if turretCount > 0 and self.TurretPositions  then
-			local maxn = table.maxn(self.TurretPositions)
-			turretCount = math.Clamp(turretCount, 0, maxn)
-			for I = 1, turretCount do
-				local v = self.TurretPositions[I]
-				self:DrawTurret(I, v[1], v[2], v[3])
-			end
-		end
-	end
 	function ENT:Draw()
 		self:DrawModel()
-		self:DrawPlayer(Vector(0, 5, 9.0), Angle(0, 90, 0), 0.2, function(model)
-			local seq = model:SelectWeightedSequence(ACT_DRIVE_JEEP)
-			if model:GetSequence() ~= seq then
-						model:ResetSequence(seq)
-				end
-		end)
-		self:DrawPlayerName(Vector(0, 0, 12.5), Angle(), 0.2)
-		self:DrawTurrets()
 	end
 
 	hook.Add("Think","XMV_CAR_Think",function()
@@ -614,6 +601,9 @@ if CLIENT then
 
 			y = y + 15
 		end
+
+		render.SetColorModulation(1, 1, 1)
+		render.SetBlend(1)
 	end
 
 	hook.Add("HUDPaint", "XMVDrawHUD", function()
@@ -623,40 +613,7 @@ if CLIENT then
 		end
 	end)
 else
-	function ENT:FireTurrets()
-		local turrets = self:GetTurretCount()
-		if turrets == 0 then return end
-		if not self.NextShot then self.NextShot = CurTime() + 0.1 end
-
-		if self.NextShot > CurTime() then return end
-
-		self.NextShot = CurTime() + 0.5
-
-		for I = 1, turrets do
-			if not self.TurretPositions[I] then return end
-			-- Get the shot angles and stuff.
-			--[=[local shootOrigin = self.TurretPositions[I][1] + self:GetVelocity() * engine.TickInterval()
-			--debugoverlay.Sphere(shootOrigin, )
-			local shootAngles = self.TurretPositions[I][2]
-			local pos, ang = LocalToWorld(shootOrigin, shootAngles, self:GetPos(), self:GetAngles())]=]
-			-- Shoot a bullet
-			local bullet = {}
-			bullet.Num 			= 20
-			bullet.Src 			= self:GetPos() + Vector(0, 0, 20)
-			bullet.Dir 			= self:GetAngles():Forward()
-			bullet.Force		= 10
-			bullet.Damage		= 1
-			bullet.Attacker 	= self:GetDriver()
-			bullet.IgnoreEntity = {self, self:GetDriver()}
-			self:FireBullets( bullet )
-		end
-	end
-
 	function ENT:Think()
-		if self:GetHealth() <= 0 and self:GetMaxHealth() ~= 0 and self:GetTurretCount() > 0 then
-			--Temp Replace
-			SafeRemoveEntity(self)
-		end
 		if self:GetDriver() and self:GetDriver():IsValid() and not self:GetDriver():Alive() then
 			self:AssignPlayer()
 		end

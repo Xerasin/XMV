@@ -104,6 +104,22 @@ function ENT:Initialize()
 				Ang = Angle(0, 0, 0),
 			},
 		},
+		{
+			Pos = Vector(),
+			Ang = Angle(),
+			{
+				Type = "PlayerName",
+				Scale = 0.2,
+				Pos = Vector(0, 3, 6),
+				Ang = Angle(0, 0, 0),
+			},
+			{
+				Type = "Player",
+				Scale = Vector(0.125, 0.125, 0.125),
+				Pos = Vector(10.0, 0, 3.25),
+				Ang = Angle(0, 0, 0)
+			},
+		}
 	}
 
 	self.Controls = {
@@ -136,7 +152,7 @@ function ENT:Initialize()
 		},
 		{
 			Key = IN_MOVERIGHT,
-			Name = "Go Riight"
+			Name = "Go Right"
 		},
 
 	}
@@ -314,33 +330,6 @@ if CLIENT then
 
 		self.ang_off = self.ang_off or 0
 		self:DrawModels()
-
-		self:DrawPlayer(Vector(10.0, 0, 3.25), Angle(0, 0, 0), 0.125, function(model)
-			local seq = model:SelectWeightedSequence(ACT_DRIVE_JEEP)
-			if model:GetSequence() ~= seq then
-				model:ResetSequence(seq)
-			end
-			local newAng
-			if not self.LastAng then self.LastAng = self:GetAngles() end
-			if self.LastAng then
-				local tang = math.floor((self.LastAng.Y - self:GetAngles().Y) * 100) / 100
-				if tang == 0 then
-					newAng = 0
-				else
-					newAng = math.Clamp(tang, -5, 5) * 3
-				end
-				self.LastAng = self:GetAngles()
-			end
-
-			if newAng then
-				if not self.Steer then
-					self.Steer = newAng
-				end
-				self.Steer = self.Steer + (newAng - self.Steer) * 0.05
-				model:SetPoseParameter( "vehicle_steer", self.Steer)
-			end
-		end)
-		self:DrawPlayerName(Vector(0, 3, 6), Angle(), 0.2)
 	end
 	net.Receive("TRAINTRACK_UPDATE", function(len)
 		local ent = net.ReadEntity()
