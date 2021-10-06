@@ -255,6 +255,7 @@ function ENT:CThink()
 end
 
 function ENT:Draw()
+	if not self.CreateXMVModels then return end
 	if not self.Models then return end
 	if not self.Models[1].Created then return self:CreateXMVModels() end
 	self:DrawModels()
