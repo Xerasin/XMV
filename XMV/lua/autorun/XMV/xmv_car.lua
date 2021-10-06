@@ -68,7 +68,7 @@ function ENT:Initialize()
 			{
 				Type = "Player",
 				Scale = Vector(0.125, 0.125, 0.125),
-				Pos = Vector(0, 2, 1.0), 
+				Pos = Vector(0, 2, 1.0),
 				Ang = Angle(0, -90, 0),
 				Steer = function(prop, veh) return veh.Steer or 0 end
 			},

@@ -53,7 +53,7 @@ function ENT:Initialize()
 			{
 				Type = "Player",
 				Scale = Vector(0.11, 0.11, 0.11),
-				Pos = Vector(11, 0, 0), 
+				Pos = Vector(11, 0, 0),
 				Ang = Angle(0, 0, 0)
 			},
 			{
@@ -67,7 +67,7 @@ function ENT:Initialize()
 			{
 				Type = "PlayerName",
 				Scale = 0.1,
-				Pos = Vector(-2, 5.9, 2), 
+				Pos = Vector(-2, 5.9, 2),
 				Ang = Angle(0, 180, 90),
 			},
 		},

@@ -155,7 +155,7 @@ function ENT:Initialize()
 			{
 				Type = "PlayerName",
 				Scale = 0.2,
-				Pos = Vector(0, -1, 2.5), 
+				Pos = Vector(0, -1, 2.5),
 				Ang = Angle(0, 0, 30),
 			},
 			{

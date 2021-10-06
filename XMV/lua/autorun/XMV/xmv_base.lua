@@ -301,9 +301,8 @@ local drawTypes = {
 			render.SetColorModulation(prop.Color.r / 255, prop.Color.g / 255, prop.Color.b / 255)
 			prop.Entity:SetColor(prop.Color)
 		end
-	
 
-		local propPos, propAng = LocalToWorld(prop.Pos, prop.Ang, modelPos, modelAng)
+		propPos, propAng = LocalToWorld(prop.Pos, prop.Ang, modelPos, modelAng)
 		prop.Entity:SetModel(vehicle:GetDriver():GetModel())
 		prop.Entity:EnableMatrix("RenderMultiply", mat)
 		prop.Entity:SetRenderOrigin(propPos)
@@ -314,13 +313,13 @@ local drawTypes = {
 		if prop.Entity:GetSequence() ~= seq then
 			prop.Entity:ResetSequence(seq)
 		end
-		
+
 		prop.Entity:SetPoseParameter( "vehicle_steer", prop.Steer and prop:Steer(vehicle) or _BaseSteer(prop, vehicle))
 
 
 		prop.Entity:DrawModel()
 	end,
-	["PlayerName"] = function(prop, modelPos, modelAng, vehicle) 
+	["PlayerName"] = function(prop, modelPos, modelAng, vehicle)
 		local rider = vehicle:GetDriver()
 		local color = Color(255, 0, 0)
 		local text = "No Driver"

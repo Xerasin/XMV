@@ -31,7 +31,7 @@ function ENT:Initialize()
 			{
 				Type = "PlayerName",
 				Scale = 0.2,
-				Pos = Vector(0, 0, 8), 
+				Pos = Vector(0, 0, 8),
 				Ang = Angle(0, 90, 0),
 			}
 		}
